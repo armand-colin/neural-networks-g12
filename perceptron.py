@@ -1,21 +1,29 @@
-import math
 import numpy as np
 
 class Perceptron:
 
-    def __init__(self, inputs: int, alpha: float):
-        self.weights = np.zeros(inputs)
+    def __init__(self, N: int, alpha: float):
+        self.N = N
+        self.weights = np.zeros(N)
         self.alpha = alpha
 
-    def train(self, inputs, results, niters=10):
-        for n in range(niters):
-            for i, input in enumerate(inputs):
-                result = self.predict(input)
-                expected = results[i]
-                self.weights = self.weights + self.alpha * (expected - result) * input
+    def train(self, X, Y, epochs=20):
+        """Trains the perceptron with data X and labels Y. X must have N-dim features."""
+        
+        for _ in range(epochs):
 
-    def activate(self, value):
-        return np.tanh(value)
+            correct = True
+            for x, y in zip(X, Y):
+                
+                e = self.weights * x * y
 
-    def predict(self, input):
-        return self.activate(np.sum(self.weights * input))
+                if e > 0:
+                    continue
+
+                # order modified for np optimization
+                # (a * b) * np.array better than np.array * a * b
+                self.weights = self.weights + (y / self.N) * x 
+                correct = False
+            
+            if correct:
+                break
