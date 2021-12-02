@@ -2,9 +2,10 @@ import numpy as np
 
 class Perceptron:
 
-    def __init__(self, N: int):
+    def __init__(self, N: int, c: float = 0):
         self.N = N
-        self.weights: np.ndarray = np.zeros(N)
+        self.c = c
+        self.weights: np.ndarray = np.zeros((1, N))
 
     def train(self, X, Y, max_epoch=20) -> bool:
         """ Trains the perceptron with data X and labels Y. X must have N-dim features. 
@@ -18,7 +19,7 @@ class Perceptron:
 
                 e = np.dot(self.weights, x) * y
 
-                if e > 0:
+                if e > self.c:
                     continue
 
                 # order modified for np optimization
