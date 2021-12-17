@@ -16,8 +16,8 @@ class DataGenerator:
 
     def generate(self, P: int,
                        mean: float = 0.0,
-                       variance: float = 1.0,
-                    ) -> Tuple[np.ndarray, np.ndarray]:
+                       variance: float = 1.0
+					) -> Tuple[np.ndarray, np.ndarray]:
         """Generates features X of dim (P, N) and labels Y of dim (P, 1)."""
 
         rng = self.rnd_generator
