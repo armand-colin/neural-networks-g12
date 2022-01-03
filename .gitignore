@@ -1,5 +1,10 @@
+## Custom rules
+**/pictures
+
+
+## Automatic gitignore
 # Byte-compiled / optimized / DLL files
-__pycache__/
+**/__pycache__
 *.py[cod]
 *$py.class
 
