@@ -1,2 +1,0 @@
-- WTF is that nabla thing ? how how ?
-- Weight initialization: vector normalization woud be good ? :)
