@@ -1,6 +1,6 @@
 ## Custom rules
 **/pictures
-
+.DS_STORE
 
 ## Automatic gitignore
 # Byte-compiled / optimized / DLL files
