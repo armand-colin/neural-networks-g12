@@ -12,12 +12,14 @@ class Network:
     K: int
     learning_rate: float
     layers: List[Layer]
+    gradient_v: bool
 
-    def __init__(self, N: int, K: int = 2, learning_rate=0.05):
+    def __init__(self, N: int, K: int = 2, learning_rate=0.05, init_v=1.0, gradient_v=False):
         self.N = N
         self.K = K
         self.learning_rate = learning_rate
-        self.layers = [Layer(N) for _ in range(K)]
+        self.layers = [Layer(N, init_v) for _ in range(K)]
+        self.gradient_v = gradient_v
 
     def output(self, x: array) -> float:
         return sum(layer.v * tanh(dot(layer.weights, x)) for layer in self.layers)
@@ -46,13 +48,28 @@ class Network:
                 x, y = train[i]
                 delta = self.output(x) - y
 
+                gradients_w = []
+                gradients_v = []
+
                 for layer in self.layers:
                     # derivative of the layer's weights implication
                     g_prime = 1.0 - (tanh(dot(layer.weights, x)) ** 2)
 
-                    # updating the weights
-                    gradient = delta * layer.v * g_prime * x
-                    layer.weights -= self.learning_rate * gradient
+                    # computing gradient w.r.t. weights
+                    gradient_w = delta * layer.v * g_prime * x
+                    gradients_w.append(gradient_w)
+                    
+                    # computing gradient w.r.t. units weights
+                    if self.gradient_v:
+                        gradient_v = delta * np.tanh(np.dot(layer.weights, x))
+                        gradients_v.append(gradient_v)
+                    else:
+                        gradients_v.append(0.0)
+
+                for gradient_w, gradient_v, layer in zip(gradients_w, gradients_v, self.layers):
+                    layer.weights -= self.learning_rate * gradient_w
+                    layer.v -= self.learning_rate * gradient_v
+
 
         update_errors(t_max)
 
