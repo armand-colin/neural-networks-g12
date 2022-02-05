@@ -10,7 +10,7 @@ class Network:
 
     N: int
     K: int
-    learning_rate: float
+    learning_rate: float or Callable[[int], float]
     layers: List[Layer]
     gradient_v: bool
 
