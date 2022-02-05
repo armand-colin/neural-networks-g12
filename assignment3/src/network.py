@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import Callable, List, Tuple
 from numpy import ndarray as array, tanh, dot
 import numpy as np
 
@@ -14,7 +14,7 @@ class Network:
     layers: List[Layer]
     gradient_v: bool
 
-    def __init__(self, N: int, K: int = 2, learning_rate=0.05, init_v=1.0, gradient_v=False):
+    def __init__(self, N: int, K: int = 2, learning_rate: float or Callable[[int], float]=0.05, init_v=1.0, gradient_v=False):
         self.N = N
         self.K = K
         self.learning_rate = learning_rate
@@ -38,6 +38,7 @@ class Network:
             train_errors[i] = self.error(train)
             test_errors[i] = self.error(test)
 
+        t = 1
         for epoch in range(t_max):
             update_errors(epoch)
 
@@ -58,7 +59,7 @@ class Network:
                     # computing gradient w.r.t. weights
                     gradient_w = delta * layer.v * g_prime * x
                     gradients_w.append(gradient_w)
-                    
+
                     # computing gradient w.r.t. units weights
                     if self.gradient_v:
                         gradient_v = delta * np.tanh(np.dot(layer.weights, x))
@@ -66,10 +67,14 @@ class Network:
                     else:
                         gradients_v.append(0.0)
 
-                for gradient_w, gradient_v, layer in zip(gradients_w, gradients_v, self.layers):
-                    layer.weights -= self.learning_rate * gradient_w
-                    layer.v -= self.learning_rate * gradient_v
+                learning_rate = self.learning_rate if type(
+                    self.learning_rate) is float else self.learning_rate(t)
 
+                for gradient_w, gradient_v, layer in zip(gradients_w, gradients_v, self.layers):
+                    layer.weights -= learning_rate * gradient_w
+                    layer.v -= learning_rate * gradient_v
+
+                t += 1
 
         update_errors(t_max)
 
