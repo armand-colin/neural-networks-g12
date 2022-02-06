@@ -13,13 +13,15 @@ class Network:
     learning_rate: float or Callable[[int], float]
     layers: List[Layer]
     gradient_v: bool
+    lru: str # "epoch" or "timestep"
 
-    def __init__(self, N: int, K: int = 2, learning_rate: float or Callable[[int], float]=0.05, init_v=1.0, gradient_v=False):
+    def __init__(self, N: int, K: int = 2, learning_rate: float or Callable[[int], float] = 0.05, init_v=1.0, gradient_v=False, lru="epoch"):
         self.N = N
         self.K = K
         self.learning_rate = learning_rate
         self.layers = [Layer(N, init_v) for _ in range(K)]
         self.gradient_v = gradient_v
+        self.lru = lru
 
     def output(self, x: array) -> float:
         return sum(layer.v * tanh(dot(layer.weights, x)) for layer in self.layers)
@@ -45,6 +47,10 @@ class Network:
             indexes = np.arange(train.size)
             np.random.shuffle(indexes)
 
+            if self.lru == "epoch":
+                learning_rate = self.learning_rate if type(
+                    self.learning_rate) is float else self.learning_rate(epoch + 1)
+
             for i in indexes:
                 x, y = train[i]
                 delta = self.output(x) - y
@@ -67,13 +73,14 @@ class Network:
                     else:
                         gradients_v.append(0.0)
 
-                learning_rate = self.learning_rate if type(
-                    self.learning_rate) is float else self.learning_rate(t)
+                if self.lru == "timestep":
+                    learning_rate = self.learning_rate if type(
+                        self.learning_rate) is float else self.learning_rate(t)
 
                 for gradient_w, gradient_v, layer in zip(gradients_w, gradients_v, self.layers):
                     layer.weights -= learning_rate * gradient_w
                     layer.v -= learning_rate * gradient_v
-
+                
                 t += 1
 
         update_errors(t_max)
