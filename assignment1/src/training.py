@@ -1,4 +1,6 @@
 from dataclasses import dataclass, field
+from multiprocessing import Manager
+from typing import List
 import numpy as np
 import multiprocessing
 from .data_generator import DataGenerator, NormalGenerator
@@ -23,21 +25,19 @@ class TrainResults:
     embedding_strengths: np.ndarray
 
 
-def train(parameters: TrainParameters, result: TrainResults) -> TrainResults:
-    embedding_strengths = np.zeros(parameters.P)
-    success_count = 0
+def train(parameters: TrainParameters, results: List[TrainResults]) -> TrainResults:
+    result = TrainResults(0, np.zeros(parameters.P))
 
     for _ in range(parameters.nd):
         perceptron = Perceptron(parameters.N, parameters.c)
         X, Y = parameters.generator.generate(parameters.P)
 
         if perceptron.train(X, Y, parameters.nmax):
-            success_count += 1
+            result.success_count += 1
 
-        embedding_strengths += perceptron.strengths
+        result.embedding_strengths += perceptron.strengths
 
-    result.success_count += success_count
-    result.embedding_strengths += embedding_strengths
+    results.append(result)
 
     return result
 
@@ -46,16 +46,17 @@ class Trainer:
 
     @staticmethod
     def train(parameters: TrainParameters, thread_count: int = 1) -> TrainResults:
-        
+
         if parameters.generator is None:
             parameters.generator = NormalGenerator(parameters.N)
 
-        result = TrainResults(0, np.zeros(parameters.P))
-
         if thread_count == 1:
-            return train(parameters, result)
+            return train(parameters, [])
 
-        processes: list[multiprocessing.Process] = []
+        manager = Manager()
+        results = manager.list()
+        result = TrainResults(0, np.zeros(parameters.P))
+        processes: List[multiprocessing.Process] = []
 
         for i in range(thread_count):
             thread_parameters = parameters.clone()
@@ -66,7 +67,7 @@ class Trainer:
 
             process = multiprocessing.Process(
                 target=train, 
-                args=(thread_parameters, result)
+                args=(thread_parameters, results)
             )
 
             process.start()
@@ -74,6 +75,10 @@ class Trainer:
 
         for process in processes:
             process.join()
+
+        for process_result in results:
+            result.success_count += process_result.success_count
+            result.embedding_strengths += process_result.embedding_strengths
 
         return result
 
@@ -86,6 +91,6 @@ class Trainer:
             _parameters.P = int(parameters.N * alpha)
 
             result = Trainer.train(_parameters, thread_count=thread_count)
-            results[i] = result.success_count / parameters.nd
+            results[i] = (1.0 * result.success_count) / (1.0 * parameters.nd)
         
         return results
