@@ -2,6 +2,7 @@
 */pictures/*
 !*/pictures/.gitkeep
 .DS_STORE
+.DS_Store
 
 ## Automatic gitignore
 # Byte-compiled / optimized / DLL files
