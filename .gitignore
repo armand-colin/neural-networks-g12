@@ -1,5 +1,6 @@
 ## Custom rules
-**/pictures
+*/pictures/*
+!*/pictures/.gitkeep
 .DS_STORE
 
 ## Automatic gitignore
